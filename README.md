@@ -74,7 +74,9 @@ Refer to [`scripts`]([https://github.com/MCPathology/MRePath/tree/main/scripts](
 ### Step 1: Generate WSI Graph Structures 
 To initiate the graph-building process for WSI patches, you can use the following Python command. This approach involves first storing binary edges, which allows for random sampling and subsequently generating hyperedges based on these stored binary edges: 
 
-```bash python extract_graph.py --h5_path H5_PATH --graph_save_path GRAPH_SAVE_PATH ```
+``` shell
+bash python extract_graph.py --h5_path H5_PATH --graph_save_path GRAPH_SAVE_PATH
+```
 
 `--h5_path H5_PATH`: This parameter specifies the path to your HDF5 file containing WSI patch data. Replace `H5_PATH` with the actual path to your data file.
 
@@ -89,6 +91,8 @@ This script will automate the processing of your data and create graph structure
 ### Step 2: Start Model Training 
 Next, use the `run.sh` script to start training the SurvPath model and other baseline models. 
 
-```bash scripts/run.sh ``` 
+``` shell 
+bash scripts/run.sh
+``` 
 
 Before running this script, refer to the hyperparameter settings recommended in the paper, and adjust relevant configurations in the script according to your experimental needs. 
