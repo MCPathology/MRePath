@@ -14,7 +14,7 @@ MRePath
   author={Chen, Richard J and Lu, Ming Y and Weng, Wei-Hung and Chen, Tiffany Y and Williamson, Drew FK and Manz, Trevor and Shady, Maha and Mahmood, Faisal},
   booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
   pages={4015--4025},
-  year={2021}
+  year={2025}
 }
 ```
 </details>
