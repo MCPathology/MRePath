@@ -6,17 +6,6 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 from custom_optims.radam import RAdam
-from models.model_ABMIL import ABMIL
-from models.model_DeepMISL import DeepMISL
-from models.model_MLPOmics import MLPOmics
-from models.model_MLPWSI import MLPWSI
-from models.model_SNNOmics import SNNOmics
-from models.model_MaskedOmics import MaskedOmics
-from models.model_MCATPathways import MCATPathways
-from models.model_SurvPath import SurvPath
-from models.model_SurvPath_with_nystrom import SurvPath_with_nystrom
-from models.model_TMIL import TMIL
-# from models.model_motcat import MCATPathwaysMotCat
 from models.model_HGNN import MRePath
 from sksurv.metrics import concordance_index_censored, concordance_index_ipcw, brier_score, integrated_brier_score, cumulative_dynamic_auc
 from scipy.ndimage import convolve
