@@ -4,7 +4,7 @@ MRePath
 <details>
 <summary>
   <b>Multimodal Cancer Survival Analysis via Hypergraph Learning with Cross-Modality Rebalance</b>, IJCAI 2025.
-  <a href="https://arxiv.org/abs/2505.11997" target="blank">[HTML]</a>
+  <a href="https://arxiv.org/abs/2505.11997" target="blank">[arxiv]</a>
   <br><em>Mingcheng Qu, Guang Yang, Donglin Di, Tonghua Su, Yue Gao, Yang Song, Lei Fan*</em></br>
 </summary>
 
@@ -84,7 +84,9 @@ bash python extract_graph.py --h5_path H5_PATH --graph_save_path GRAPH_SAVE_PATH
 
 For a quick start, you can also run the `graph.sh` script to generate WSI graph structures: 
 
-```bash bash scripts/graph.sh ``` 
+``` shell
+bash scripts/graph.sh
+``` 
 
 This script will automate the processing of your data and create graph structures suitable for training. Ensure that you check and adjust the parameter settings within the script as needed to ensure compatibility with your specific data format.
 
