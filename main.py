@@ -52,25 +52,6 @@ def main(args):
         #write results to pkl
         filename = os.path.join(args.results_dir, 'split_{}_results.pkl'.format(i))
         print("Saving results...")
-        _save_pkl(filename, results)
-    
-    final_df = pd.DataFrame({
-        'folds': folds,
-        'val_cindex': all_val_cindex,
-        'val_cindex_ipcw': all_val_cindex_ipcw,
-        'val_IBS': all_val_IBS,
-        'val_iauc': all_val_iauc,
-        "val_loss": all_val_loss,
-        'val_BS': all_val_BS,
-    })
-
-    if len(folds) != args.k:
-        save_name = 'summary_partial_{}_{}.csv'.format(start, end)
-    else:
-        save_name = 'summary.csv'
-        
-    final_df.to_csv(os.path.join(args.results_dir, save_name))
-
 
 if __name__ == "__main__":
     start = timer()
