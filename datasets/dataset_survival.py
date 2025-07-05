@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import copy
 from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler
+from torch_geometric.data import Data
 
 import torch
 import torch.nn.functional as F
@@ -723,7 +724,7 @@ class SurvivalDataset(Dataset):
             omic5 = torch.tensor(self.omics_data_dict["rna"][self.omic_names[4]].iloc[idx])
             omic6 = torch.tensor(self.omics_data_dict["rna"][self.omic_names[5]].iloc[idx])
 
-            return (patch_features, graph, omic1, omic2, omic3, omic4, omic5, omic6, label, event_time, c, clinical_data)
+            return (patch_features, [graph], omic1, omic2, omic3, omic4, omic5, omic6, label, event_time, c, clinical_data)
         
         elif self.modality == "survpath":
             patch_features, graph = self._load_wsi_embs_from_path(self.data_dir, slide_ids)
@@ -776,52 +777,79 @@ class SurvivalDataset(Dataset):
             - mask : torch.Tensor
 
         """
-        # print(slide_ids)
-        patch_features = []
-        graph_representations=[]
-        # load all slide_ids corresponding for the patient
+        all_features = []
+        all_edges = {'index': [], 'latent': [], 'hyp': []}
+        node_offsets = [0]  # 
+    
         for slide_id in slide_ids:
             try:
-                graph_path = os.path.join(data_dir, 'graph_files', '{}.pt'.format(slide_id.rstrip('.svs')))
-                # print(graph_path)
+                graph_path = os.path.join(data_dir, 'graph_files', f"{slide_id.rstrip('.svs')}.pt")
                 graph = torch.load(graph_path)
-                patch_features.append(graph.x)
-                graph_representations.append(graph)
-                
-            except FileNotFoundError:
-                print('FileNotFound: ', graph_path)
-                continue
-        #try:
-        if True:
-            patch_features = torch.cat(patch_features, dim=0)
-            patch_features = torch.nan_to_num(patch_features, nan=0.0)
+        
+                current_nodes = graph.x.size(0)
+                node_offsets.append(node_offsets[-1] + current_nodes)
             
-            if patch_features.size(0)>self.num_patches:
-                # select edge
-                indices = np.random.choice(patch_features.size(0), self.num_patches, replace=False)
-                indices_set = list(indices)
-                adj_matrix_index = graph.edge_index.cpu().numpy()
-                adj_matrix_latent = graph.edge_latent.cpu().numpy()
-                            
-                            
-                mask_index = np.isin(adj_matrix_index[0], indices_set) & np.isin(adj_matrix_index[1], indices_set)
-                mask_latent = np.isin(adj_matrix_latent[0], indices_set) & np.isin(adj_matrix_latent[1], indices_set)
-                    
-                adj_matrix_index = adj_matrix_index[:, mask_index]
-                adj_matrix_latent = adj_matrix_latent[:, mask_latent]
+                all_features.append(graph.x)
+                for edge_type in ['index', 'latent']:
+                    edges = getattr(graph, f'edge_{edge_type}') + node_offsets[-2]
+                    all_edges[edge_type].append(edges)
                 
-                node_map = {old.item(): new for new, old in enumerate(indices_set)}
-                if(adj_matrix_index.shape[1]):
-                    adj_matrix_index[0] = np.vectorize(node_map.get)(adj_matrix_index[0])
-                    adj_matrix_index[1] = np.vectorize(node_map.get)(adj_matrix_index[1])
-                if(adj_matrix_latent.shape[1]):
-                    adj_matrix_latent[0] = np.vectorize(node_map.get)(adj_matrix_latent[0])
-                    adj_matrix_latent[1] = np.vectorize(node_map.get)(adj_matrix_latent[1])
-                graph_representations[0].edge_index = torch.tensor(adj_matrix_index, dtype=torch.long)
-                graph_representations[0].edge_latent = torch.tensor(adj_matrix_latent, dtype=torch.long)
+            except Exception as e:
+                # print(f"Skipped {slide_id}: {str(e)}")
+                node_offsets.append(node_offsets[-1])
+                continue
 
-                patch_features = patch_features[indices]
-        return patch_features, graph_representations
+    
+        global_features = torch.cat(all_features, dim=0)
+        global_features = torch.nan_to_num(global_features, nan=0.0)
+    
+    
+        if len(global_features) > self.num_patches:
+            selected_indices = torch.randperm(len(global_features))[:self.num_patches]
+        else:
+            selected_indices = torch.arange(len(global_features))
+    
+        selected_set = set(selected_indices.tolist())
+        global_graph = Data(x=global_features[selected_indices])
+        # index_mapping = {old: new for new, old in enumerate(selected_indices.tolist())}
+
+        for edge_type in ['index', 'latent']:
+            setattr(global_graph, f'edge_{edge_type}', self.process_edge_type(all_edges[edge_type], selected_indices))
+        '''slide_id = slide_ids[0][:12]
+        try:
+            graph_path = os.path.join(data_dir, f"{slide_id.rstrip('.svs')[0:12]}.pt")
+            graph = torch.load(graph_path)
+            all_features.append(graph)
+        except Exception as e:
+            print(f"Skipped {slide_id}: {str(e)}")
+            
+        global_graph = Data(x=all_features[0].ffpe)
+        global_graph.edge_latent = all_features[0].ffpe_edge_latent
+        global_graph.edge_index = all_features[0].ffpe_edge_index'''
+        
+        return global_graph.x, global_graph
+    
+    def process_edge_type(self, all_edges_of_type, selected_indices):
+        
+        
+        if not all_edges_of_type:
+            return torch.empty((2, 0), dtype=torch.long)
+        
+        edges = torch.cat(all_edges_of_type, dim=1)
+        if edges.shape[1] == 0:
+            return edges
+
+        source_nodes_in_selection = torch.isin(edges[0], selected_indices)
+        dest_nodes_in_selection = torch.isin(edges[1], selected_indices)
+        
+        
+        valid_edge_mask = source_nodes_in_selection & dest_nodes_in_selection
+        filtered_edges = edges[:, valid_edge_mask]
+
+        sorted_selected_indices, _ = torch.sort(selected_indices)
+        remapped_edges = torch.searchsorted(sorted_selected_indices, filtered_edges)
+        
+        return remapped_edges
 
     def get_clinical_data(self, case_id):
         """
