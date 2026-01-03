@@ -91,4 +91,3 @@ bash scripts/run.sh
 
 Before running this script, refer to the hyperparameter settings recommended in the paper, and adjust relevant configurations in the script according to your experimental needs. 
 
-If you find our work useful in your research or if you use parts of this code please consider citing our paper:
