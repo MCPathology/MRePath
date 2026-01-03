@@ -9,12 +9,14 @@ MRePath
 </summary>
 
 ```bash
-@inproceedings{chen2021multimodal,
-  title={Multimodal Co-Attention Transformer for Survival Prediction in Gigapixel Whole Slide Images},
-  author={Chen, Richard J and Lu, Ming Y and Weng, Wei-Hung and Chen, Tiffany Y and Williamson, Drew FK and Manz, Trevor and Shady, Maha and Mahmood, Faisal},
-  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
-  pages={4015--4025},
-  year={2021}
+@misc{qu2025multimodalcancersurvivalanalysis,
+      title={Multimodal Cancer Survival Analysis via Hypergraph Learning with Cross-Modality Rebalance}, 
+      author={Mingcheng Qu and Guang Yang and Donglin Di and Tonghua Su and Yue Gao and Yang Song and Lei Fan},
+      year={2025},
+      eprint={2505.11997},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2505.11997}, 
 }
 ```
 </details>
@@ -34,29 +36,19 @@ To download diagnostic WSIs (formatted as .svs files), molecular feature data an
 
 
 ## Processing Whole Slide Images
-To process WSIs, first, the tissue regions in each biopsy slide are segmented using Otsu's Segmentation on a downsampled WSI using OpenSlide. The 256 x 256 patches without spatial overlapping are extracted from the segmented tissue regions at the desired magnification. Consequently, a pretrained truncated ResNet50 is used to encode raw image patches into 1024-dim feature vectors, which we then save as .pt files for each WSI. The extracted features then serve as input (in a .pt file) to the network. The following folder structure is assumed for the extracted features vectors:    
+To process WSIs, we follow a procedure similar to [CLAM](https://github.com/mahmoodlab/CLAM). First, tissue regions in each biopsy slide are segmented using Otsu's thresholding on a downsampled WSI via OpenSlide. Then, non-overlapping 256 × 256 patches are extracted from the segmented tissue regions at the desired magnification. A pretrained truncated ResNet50 is used to encode these raw image patches into 1024-dimensional feature vectors, which are saved as `.h5` files for each WSI. These extracted features serve as input (in `.h5` format) for subsequent graph construction. The following folder structure is assumed for the extracted feature vectors.    
 ```bash
 DATA_ROOT_DIR/
     └──TCGA_BLCA/
-        ├── slide_1.pt
-        ├── slide_2.pt
-        └── ...
+         └──h5_files/
+              ├── slide_1.h5
+              ├── slide_2.pt
+              └── ...
     └──TCGA_BRCA/
-        ├── slide_1.pt
-        ├── slide_2.pt
-        └── ...
-    └──TCGA_GBMLGG/
-        ├── slide_1.pt
-        ├── slide_2.pt
-        └── ...
-    └──TCGA_LUAD/
-        ├── slide_1.ptd
-        ├── slide_2.pt
-        └── ...
-    └──TCGA_UCEC/
-        ├── slide_1.pt
-        ├── slide_2.pt
-        └── ...
+         └──h5_files/
+              ├── slide_1.h5
+              ├── slide_2.pt
+              └── ...
     ...
 ```
 DATA_ROOT_DIR is the base directory of all datasets / cancer type(e.g. the directory to your SSD). Within DATA_ROOT_DIR, each folder contains a list of .pt files for that dataset / cancer type.
@@ -98,3 +90,5 @@ bash scripts/run.sh
 ``` 
 
 Before running this script, refer to the hyperparameter settings recommended in the paper, and adjust relevant configurations in the script according to your experimental needs. 
+
+If you find our work useful in your research or if you use parts of this code please consider citing our paper:
