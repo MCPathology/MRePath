@@ -93,7 +93,7 @@ class AlignFusion(nn.Module):
         # print(queries_p)
         queries = queries_p + self.self_attn(queries_p, queries_p, queries_p)
         # print(queries)
-        queries = self.norm1(queries)
+        g = self.norm1(queries)
         
         keys=keys_p
         attn_out = self.cross_attn_pathway_to_histology(q=queries, k=keys, v=keys)
@@ -116,7 +116,7 @@ class AlignFusion(nn.Module):
         q = q+self.final_cross_attn(q=q,k=k,v=k)
         q = self.final_norm(q)
 
-        return torch.cat((q, k),dim=1)
+        return torch.cat((k, q),dim=-2)
 class MLPBlock(nn.Module):
     def __init__(
         self,
